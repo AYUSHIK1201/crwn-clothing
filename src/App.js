@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch,Route } from 'react-router-dom';
+import { Switch,Route,Redirect } from 'react-router-dom';
 import './App.css';
 
 import HomePage from './pages/homepage/homepage.component';
@@ -25,14 +25,14 @@ class App extends React.Component {
         const userRef = await createUserProfileDocument(userAuth);
 
         userRef.onSnapshot(snapShot => {
-          this.setState({
+          this.setState({ 
             currentUser: {
               id: snapShot.id,
               ...snapShot.data()
             }
           });
 
-          console.log(this.state);
+        
         });
       }
 
@@ -46,11 +46,21 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <Header currentUser={this.state.currentUser}/>
+        <Header />
         <Switch>
         <Route exact path='/' component={HomePage} />
         <Route path ='/shop'  component={ShopPage}/>
-        <Route path ='/signin'  component={SignInAndSignUpPage}/>
+         <Route
+            exact
+            path='/signin'
+            render={() =>
+              this.props.currentUser ? (
+                <Redirect to='/' />
+              ) : (
+                <SignInAndSignUpPage />
+              )
+            }
+            />
         </Switch>
     
       </div>
@@ -58,5 +68,14 @@ class App extends React.Component {
   }
   
 }
+const mapStateToProps = ({ user }) => ({
+  currentUser: user.currentUser
+});
 
-export default App;
+const mapDispatchToProps = dispatch => ({
+  setCurrentUser: user => dispatch(setCurrentUser(user))
+});
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(App);
